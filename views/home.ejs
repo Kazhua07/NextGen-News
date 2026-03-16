@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>News App</title>
+  <link rel="stylesheet" href="styles/style.css" />
+  <script src="scripts/script.js" defer></script>
+</head>
+<body>
+
+  <!-- ===== NAVIGATION BAR ===== -->
+  <nav>
+    <div class="container main-nav">
+
+      <!-- Row 1: Logo + Search -->
+      <div class="row row-top">
+        <div class="logo">
+          <img src="logo.png" alt="Logo" />
+        </div>
+        <div id="search-bar">
+          <button id="search-toggle">🔍</button>
+          <input
+            type="text"
+            class="news-input hidden"
+            id="search-text"
+            placeholder="e.g. technology, cricket"
+          />
+        </div>
+      </div>
+
+      <!-- Row 2: Theme Toggle + Nav Links -->
+      <div class="row row-bottom">
+        <div id="theme-toggle">🌙</div>
+        <ul class="nav-links">
+          <li class="hover-link nav-item" id="technology" onclick="onNavItemClick('technology')">Technology</li>
+          <li class="hover-link nav-item" id="sports" onclick="onNavItemClick('sports')">Sports</li>
+          <li class="hover-link nav-item" id="science" onclick="onNavItemClick('science')">Science</li>
+          <li class="hover-link nav-item" id="business" onclick="onNavItemClick('business')">Business</li>
+          <li class="hover-link nav-item" id="world" onclick="onNavItemClick('world')">World</li>
+        </ul>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main>
+    <div class="cards-container container flex" id="cardscontainer">
+      <h2>Loading news... 📰</h2>
+    </div>
+  </main>
+
+  <!-- ===== TEMPLATE ===== -->
+  <template id="template-news-card">
+    <div class="card">
+      <div class="card-header">
+        <img src="https://via.placeholder.com/400x200" alt="News Image" id="news-img" />
+      </div>
+      <div class="card-content">
+        <h3 id="news-title">News Title</h3>
+        <h6 class="news-source" id="news-source">Source • Date</h6>
+        <p class="news-desc" id="news-desc">Description...</p>
+      </div>
+    </div>
+  </template>
+
+
+    <!-- ===== CHATBOT TOGGLE ICON ===== -->
+  <div id="chatbot-toggle-icon">💬</div>
+
+  <!-- ===== INLINE CHATBOT ===== -->
+  <div id="chatbot-inline" class="hidden">
+    <div id="chatbot-header">AI Chatbot</div>
+    <div id="chatbot-messages"></div>
+    <div id="chatbot-input-area">
+      <input type="text" id="chatbot-input" placeholder="Type a message..." />
+      <button id="chatbot-send">➤</button>
+    </div>
+  </div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>News App</title>
+
+  <!-- Marked.js for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    /* ==== RESET & BASE ==== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-text-color: #183b56;
+      --secondary-text-color: #577592;
+      --accent-color: #2294ed;
+      --accent-color-dark: #1d69a3;
+      --background-light: #f3faff;
+      --background-dark: #1e1e1e;
+      --text-light: #ffffff;
+      --text-dark: #000000;
+
+      /* Chatbot specific colors */
+      --chatbot-bg-gradient-start: #e0f2f7;
+      --chatbot-bg-gradient-end: #ffffff;
+      --chatbot-header-gradient-start: #2294ed;
+      --chatbot-header-gradient-end: #1a7bbd;
+      --chatbot-user-bubble: #dcf8c6;
+      --chatbot-bot-bubble: #f0f0f0;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: var(--background-light);
+      color: var(--primary-text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body[data-theme="dark"] {
+      background-color: var(--background-dark);
+      color: var(--text-light);
+    }
+
+    /* ==== NAVBAR ==== */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 99;
+      background-color: var(--background-light);
+      box-shadow: 0 0 4px #bbd0e2;
+    }
+
+    body[data-theme="dark"] nav {
+      background-color: #222;
+    }
+
+    .main-nav {
+      padding-block: 12px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .logo img {
+      width: 45px;
+      height: auto;
+    }
+
+    #search-bar {
+      position: relative;
+    }
+
+    #search-toggle {
+      background-color: var(--accent-color);
+      color: white;
+      padding: 8px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .news-input {
+      position: absolute;
+      top: 40px;
+      right: 0;
+      width: 200px;
+      padding: 8px 12px;
+      border: 2px solid #bbd0e2;
+      border-radius: 4px;
+      background-color: white;
+      z-index: 100;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    body[data-theme="dark"] .news-input {
+      background-color: #333;
+      color: white;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .row-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+      gap: 12px;
+    }
+
+    #theme-toggle {
+      font-size: 1.5rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-right: 12px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 16px;
+      flex-grow: 1;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      min-width: 0;
+      overflow-x: auto;
+    }
+
+    .hover-link {
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .hover-link:hover {
+      color: var(--accent-color-dark);
+    }
+
+    .nav-item.active {
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    main {
+      margin-top: 140px;
+      padding-block: 20px;
+    }
+
+    .cards-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      width: 360px;
+      min-height: 400px;
+      box-shadow: 0 0 4px #d4ecff;
+      border-radius: 4px;
+      background-color: #fff;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      background-color: #f9fdff;
+      box-shadow: 1px 1px 8px #d4ecff;
+      transform: translateY(-2px);
+    }
+
+    body[data-theme="dark"] .card {
+      background-color: #2a2a2a;
+    }
+
+    .card-header img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .card-content {
+      padding: 12px;
+    }
+
+    .news-source {
+      margin-block: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .row-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        gap: 12px;
+      }
+    }
+
+    /* ==== INLINE CHATBOT ==== */
+    #chatbot-toggle-icon {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: linear-gradient(45deg, var(--chatbot-header-gradient-start), var(--chatbot-header-gradient-end));
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      z-index: 1001;
+      transition: right 0.3s ease-out, transform 0.2s ease-in-out;
+    }
+
+    #chatbot-toggle-icon:hover {
+      transform: scale(1.1);
+    }
+
+    #chatbot-toggle-icon.moved {
+      right: 380px;
+    }
+
+    #chatbot-inline {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 370px;
+      height: 500px;
+      background: linear-gradient(to bottom right, var(--chatbot-bg-gradient-start), var(--chatbot-bg-gradient-end));
+      border: none;
+      border-radius: 10px 10px 0 0;
+      display: flex;
+      flex-direction: column;
+      font-family: Arial, sans-serif;
+      box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.25);
+      z-index: 1000;
+      transform: translateY(100%);
+      opacity: 0;
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    }
+
+    #chatbot-inline.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    #chatbot-header {
+      background: linear-gradient(to right, var(--chatbot-header-gradient-start), var(--chatbot-header-gradient-end));
+      color: #fff;
+      padding: 10px;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 10px 10px 0 0;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    #chatbot-messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 14px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    #chatbot-input-area {
+      display: flex;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      background-color: var(--chatbot-bg-gradient-end);
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    #chatbot-input {
+      flex: 1;
+      border: none;
+      padding: 10px;
+      outline: none;
+      background-color: transparent;
+      color: var(--primary-text-color);
+    }
+
+    #chatbot-send {
+      background: linear-gradient(to right, #4CAF50, #66BB6A);
+      color: white;
+      border: none;
+      padding: 0 15px;
+      cursor: pointer;
+      border-radius: 0 0 10px 0;
+      font-size: 18px;
+      box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+      transition: background 0.2s ease-in-out, transform 0.1s ease-in-out;
+    }
+
+    #chatbot-send:hover {
+      background: linear-gradient(to right, #66BB6A, #4CAF50);
+      transform: scale(1.05);
+    }
+.chat-msg {
+  display: inline-block;
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: 18px;
+  max-width: 80%;
+  word-wrap: break-word;
+  line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* User message bubble (green, right aligned) */
+.user {
+  background-color: var(--chatbot-user-bubble);
+  color: #333;
+  align-self: flex-end;   /* Push to right side */
+  text-align: left;       /* Keep text aligned left inside */
+  width: fit-content;     /* Shrink to fit text */
+}
+
+/* Bot message bubble (grey, left aligned) */
+.bot {
+  background-color: var(--chatbot-bot-bubble);
+  color: #333;
+  align-self: flex-start; /* Push to left side */
+  text-align: left;
+  width: fit-content;
+}
+
+/* Make message container a flex column */
+#chatbot-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 5px; /* spacing between bubbles */
+  padding: 10px;
+  overflow-y: auto;
+  font-size: 14px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+
+    .chat-msg.bot ul,
+    .chat-msg.bot ol {
+      margin-left: 20px;
+      margin-top: 5px;
+      margin-bottom: 5px;
+      padding-left: 0;
+    }
+
+    .chat-msg.bot li {
+      margin-bottom: 3px;
+      list-style-type: disc;
+      margin-left: 1em;
+    }
+
+    .chat-msg.bot p {
+      margin-bottom: 5px;
+      margin-top: 5px;
+    }
+
+    .chat-msg.bot strong {
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ===== NAVIGATION BAR ===== -->
+  <nav>
+    <div class="container main-nav">
+      <div class="row row-top">
+        <div class="logo">
+          <img src="logo.png" alt="Logo" />
+        </div>
+        <div id="search-bar">
+          <button id="search-toggle">🔍</button>
+          <input type="text" class="news-input hidden" id="search-text" placeholder="e.g. technology, cricket" />
+        </div>
+      </div>
+
+      <div class="row row-bottom">
+        <div id="theme-toggle">🌙</div>
+        <ul class="nav-links">
+          <li class="hover-link nav-item" id="technology" onclick="onNavItemClick('technology')">Technology</li>
+          <li class="hover-link nav-item" id="sports" onclick="onNavItemClick('sports')">Sports</li>
+          <li class="hover-link nav-item" id="science" onclick="onNavItemClick('science')">Science</li>
+          <li class="hover-link nav-item" id="business" onclick="onNavItemClick('business')">Business</li>
+          <li class="hover-link nav-item" id="world" onclick="onNavItemClick('world')">World</li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="cards-container container flex" id="cardscontainer">
+      <h2>Loading news... 📰</h2>
+    </div>
+  </main>
+
+  <template id="template-news-card">
+    <div class="card">
+      <div class="card-header">
+        <img src="https://via.placeholder.com/400x200" alt="News Image" id="news-img" />
+      </div>
+      <div class="card-content">
+        <h3 id="news-title">News Title</h3>
+        <h6 class="news-source" id="news-source">Source • Date</h6>
+        <p class="news-desc" id="news-desc">Description...</p>
+      </div>
+    </div>
+  </template>
+
+  <!-- ===== CHATBOT TOGGLE ICON ===== -->
+  <div id="chatbot-toggle-icon">💬</div>
+
+  <!-- ===== INLINE CHATBOT ===== -->
+  <div id="chatbot-inline" class="hidden">
+    <div id="chatbot-header">AI Chatbot (Llama 3.3 70B)</div>
+    <div id="chatbot-messages"></div>
+    <div id="chatbot-input-area">
+      <input type="text" id="chatbot-input" placeholder="Type a message..." />
+      <button id="chatbot-send">➤</button>
+    </div>
+  </div>
+
+  <script>
+    // ===== CONFIG =====
+    const API_KEY = "4a24e1c4a5962c36f679155697c5c96d"; // Replace with your actual GNews API key
+    const BASE_URL = "https://gnews.io/api/v4/top-headlines?lang=en&country=in&topic=";
+
+    window.addEventListener("load", () => {
+      fetchNews("technology");
+    });
+
+    async function fetchNews(topic) {
+      try {
+        const res = await fetch(`${BASE_URL}${topic}&apikey=${API_KEY}`);
+        const data = await res.json();
+        bindData(data.articles);
+      } catch (err) {
+        document.getElementById("cardscontainer").innerHTML = `<h2>❌ Error loading news.</h2>`;
+        console.error("Fetch error:", err);
+      }
+    }
+
+    function bindData(articles) {
+      const container = document.getElementById("cardscontainer");
+      const template = document.getElementById("template-news-card");
+      container.innerHTML = "";
+
+      if (!articles || articles.length === 0) {
+        container.innerHTML = "<h2>No results found 🔍</h2>";
+        return;
+      }
+
+      articles.forEach(article => {
+        if (!article.image || !article.description) return;
+
+        const card = template.content.cloneNode(true);
+        fillDataInCard(card, article);
+        container.appendChild(card);
+      });
+    }
+
+    function fillDataInCard(card, article) {
+      const img = card.querySelector("#news-img");
+      const title = card.querySelector("#news-title");
+      const desc = card.querySelector("#news-desc");
+      const source = card.querySelector("#news-source");
+
+      img.src = article.image;
+      title.textContent = article.title.slice(0, 60) + "...";
+      desc.textContent = article.description.slice(0, 150) + "...";
+
+      const date = new Date(article.publishedAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+      source.textContent = `${article.source.name} • ${date}`;
+
+      card.firstElementChild.addEventListener("click", () => {
+        window.open(article.url, "_blank");
+      });
+    }
+
+    let curSelectedNav = null;
+    function onNavItemClick(id) {
+      fetchNews(id);
+      const item = document.getElementById(id);
+      curSelectedNav?.classList.remove("active");
+      curSelectedNav = item;
+      curSelectedNav.classList.add("active");
+    }
+
+    const themeToggle = document.getElementById("theme-toggle");
+    themeToggle.addEventListener("click", () => {
+      if (document.body.getAttribute("data-theme") === "dark") {
+        document.body.removeAttribute("data-theme");
+        themeToggle.textContent = "🌙";
+      } else {
+        document.body.setAttribute("data-theme", "dark");
+        themeToggle.textContent = "☀️";
+      }
+    });
+
+    const searchToggle = document.getElementById("search-toggle");
+    const searchInput = document.getElementById("search-text");
+
+    searchToggle.addEventListener("click", () => {
+      searchInput.classList.toggle("hidden");
+      searchInput.focus();
+    });
+
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const query = searchInput.value.trim();
+        if (query) {
+          fetchSearchNews(query);
+          curSelectedNav?.classList.remove("active");
+          curSelectedNav = null;
+        }
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#search-bar") && !e.target.closest("#search-toggle")) {
+        searchInput.classList.add("hidden");
+      }
+    });
+
+    // ===== CHATBOT SCRIPT WITH LLAMA 3.3 70B MODEL =====
+    const chatbotToggleIcon = document.getElementById("chatbot-toggle-icon");
+    const chatbotInline = document.getElementById("chatbot-inline");
+    const chatbotSend = document.getElementById("chatbot-send");
+    const chatbotInput = document.getElementById("chatbot-input");
+    const chatbotMessages = document.getElementById("chatbot-messages");
+
+    // Llama API key
+    const LLAMA_API_KEY = "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";
+
+    // Store conversation history
+    window.conversationHistory = [
+      {
+        role: "system",
+        content: "You are a helpful, polite, and professional AI assistant. Always respond in a friendly and respectful tone, providing clear and concise information. Please use Markdown for formatting, including new lines, bullet points (* or -), and bold text (**text**)."
+      }
+    ];
+
+    // Typing animation settings
+    const TYPING_MIN_DELAY = 5; // Minimum ms per character
+    const TYPING_MAX_DELAY = 15; // Maximum ms per character
+
+    // Toggle chatbot visibility
+    chatbotToggleIcon.addEventListener("click", () => {
+      if (chatbotInline.classList.contains("hidden")) {
+        chatbotInline.classList.remove("hidden");
+        setTimeout(() => {
+          chatbotInline.classList.add("visible");
+          chatbotToggleIcon.classList.add("moved");
+        }, 10);
+      } else {
+        chatbotInline.classList.remove("visible");
+        chatbotToggleIcon.classList.remove("moved");
+        chatbotInline.addEventListener("transitionend", function handler() {
+          chatbotInline.classList.add("hidden");
+          chatbotInline.removeEventListener("transitionend", handler);
+        }, { once: true });
+      }
+    });
+
+    // Event listeners for sending messages
+    chatbotSend.addEventListener("click", sendMessage);
+    chatbotInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    // Main function to send message and get response
+    async function sendMessage() {
+      const userMsg = chatbotInput.value.trim();
+      if (!userMsg) return;
+
+      // Display user message immediately
+      appendMessage("user", userMsg);
+      chatbotInput.value = "";
+      
+      // Show typing indicator
+      const typingIndicator = showTypingIndicator();
+
+      try {
+        // Add user message to history
+        window.conversationHistory.push({
+          role: "user",
+          content: userMsg
+        });
+
+        // Use Llama 3.3 70B model via OpenRouter
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${LLAMA_API_KEY}`,
+            "HTTP-Referer": window.location.origin, // Your site URL
+            "X-OpenRouter-Title": "News App Chatbot", // Your site name
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            "model": "meta-llama/llama-3.3-70b-instruct:free",
+            "messages": window.conversationHistory
+          })
+        });
+
+        // Remove typing indicator
+        if (typingIndicator && typingIndicator.parentNode) {
+          typingIndicator.remove();
+        }
+
+        if (!res.ok) {
+          const errorData = await res.text();
+          console.error("API Error:", res.status, errorData);
+          
+          if (res.status === 401) {
+            appendMessage("bot", "❌ Invalid Llama API key. Please check your OpenRouter API key.");
+          } else {
+            appendMessage("bot", `❌ API Error: ${res.status}`);
+          }
+          return;
+        }
+
+        const data = await res.json();
+        
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+          const botResponse = data.choices[0].message;
+          const botMsg = botResponse.content || "⚠️ No response content";
+          
+          // Add assistant response to history
+          window.conversationHistory.push({
+            role: "assistant",
+            content: botMsg
+          });
+          
+          // Display bot message with character-by-character animation
+          await typeWriterEffect(botMsg);
+          
+        } else {
+          console.error("Unexpected API response:", data);
+          appendMessage("bot", "❌ Unexpected API response format");
+        }
+      } catch (err) {
+        // Remove typing indicator if there's an error
+        if (typingIndicator && typingIndicator.parentNode) {
+          typingIndicator.remove();
+        }
+        console.error("Fetch error:", err);
+        appendMessage("bot", "❌ Error connecting to Llama. Please check your internet connection.");
+      }
+    }
+
+    // Show typing indicator animation
+    function showTypingIndicator() {
+      const indicator = document.createElement("div");
+      indicator.classList.add("chat-msg", "bot", "typing-indicator");
+      indicator.innerHTML = `
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+      `;
+      chatbotMessages.appendChild(indicator);
+      chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+      return indicator;
+    }
+
+    // Smooth character-by-character typing animation
+    async function typeWriterEffect(fullText) {
+      return new Promise((resolve) => {
+        // Create message container
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("chat-msg", "bot");
+        chatbotMessages.appendChild(messageDiv);
+        
+        // First, create a plain text version without markdown for typing
+        // This prevents markdown characters from showing during animation
+        const plainText = fullText
+          .replace(/\*\*/g, '') // Remove bold markers
+          .replace(/\*/g, '')    // Remove italic markers
+          .replace(/__/g, '')    // Remove alternate bold markers
+          .replace(/_/g, '')     // Remove alternate italic markers
+          .replace(/#/g, '')     // Remove heading markers
+          .replace(/\[/g, '')    // Remove link brackets
+          .replace(/\]/g, '')    // Remove link brackets
+          .replace(/\(/g, '')    // Remove link parentheses
+          .replace(/\)/g, '')    // Remove link parentheses
+          .replace(/`/g, '')     // Remove code markers
+          .replace(/>/g, '')     // Remove blockquote markers
+          .replace(/\n\s*\n/g, '\n\n'); // Preserve paragraphs but clean up
+        
+        let charIndex = 0;
+        let currentText = "";
+        
+        function typeNextChar() {
+          if (charIndex < plainText.length) {
+            // Add next character
+            currentText += plainText[charIndex];
+            messageDiv.textContent = currentText;
+            
+            // Auto-scroll to bottom
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            
+            // Random delay for realistic typing (faster for spaces, punctuation)
+            let delay;
+            const currentChar = plainText[charIndex];
+            
+            if (currentChar === ' ') {
+              delay = TYPING_MIN_DELAY; // Faster for spaces
+            } else if (currentChar === '.' || currentChar === '!' || currentChar === '?' || currentChar === ',') {
+              delay = TYPING_MAX_DELAY; // Pause slightly at punctuation
+            } else {
+              delay = TYPING_MIN_DELAY + Math.random() * (TYPING_MAX_DELAY - TYPING_MIN_DELAY);
+            }
+            
+            charIndex++;
+            setTimeout(typeNextChar, delay);
+          } else {
+            // Typing finished - now apply markdown formatting to the full text
+            try {
+              // Parse the full markdown text
+              const formattedHtml = marked.parse(fullText);
+              
+              // Apply formatting with a smooth fade
+              messageDiv.style.opacity = '0.7';
+              messageDiv.innerHTML = formattedHtml;
+              
+              // Fade in the formatted text
+              setTimeout(() => {
+                messageDiv.style.transition = 'opacity 0.3s ease';
+                messageDiv.style.opacity = '1';
+              }, 50);
+              
+            } catch (e) {
+              console.error("Markdown parsing error:", e);
+              messageDiv.textContent = fullText; // Fallback to plain text
+            }
+            resolve();
+          }
+        }
+        
+        // Start typing animation
+        typeNextChar();
+      });
+    }
+
+    // Regular append message (for user messages and errors)
+    function appendMessage(sender, text) {
+      const div = document.createElement("div");
+      div.classList.add("chat-msg", sender);
+      
+      if (sender === "bot") {
+        try {
+          div.innerHTML = marked.parse(text);
+        } catch (e) {
+          div.textContent = text;
+        }
+      } else {
+        div.textContent = text;
+      }
+      
+      chatbotMessages.appendChild(div);
+      chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+
+    // Reset conversation
+    function resetConversation() {
+      window.conversationHistory = [
+        {
+          role: "system",
+          content: "You are a helpful, polite, and professional AI assistant. Always respond in a friendly and respectful tone, providing clear and concise information. Please use Markdown for formatting, including new lines, bullet points (* or -), and bold text (**text**)."
+        }
+      ];
+      chatbotMessages.innerHTML = '';
+      appendMessage("bot", "👋 Conversation reset! How can I help you?");
+    }
+
+    // Add reset button to chatbot header
+    function addResetButton() {
+      const header = document.getElementById("chatbot-header");
+      const resetBtn = document.createElement("button");
+      resetBtn.textContent = "↺";
+      resetBtn.style.cssText = `
+        float: right;
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        margin-right: 10px;
+        padding: 0 5px;
+        transition: transform 0.2s;
+      `;
+      resetBtn.title = "Reset conversation";
+      resetBtn.onmouseover = () => resetBtn.style.transform = "rotate(180deg)";
+      resetBtn.onmouseout = () => resetBtn.style.transform = "rotate(0deg)";
+      resetBtn.onclick = resetConversation;
+      header.appendChild(resetBtn);
+    }
+
+    // Add typing indicator styles
+    const style = document.createElement('style');
+    style.textContent = `
+      .typing-indicator {
+        display: flex;
+        gap: 4px;
+        padding: 12px !important;
+        background-color: var(--chatbot-bot-bubble) !important;
+        width: fit-content;
+      }
+      
+      .typing-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #90949c;
+        border-radius: 50%;
+        animation: typingBounce 1.4s infinite ease-in-out;
+      }
+      
+      .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+      .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+      
+      @keyframes typingBounce {
+        0%, 80%, 100% { transform: scale(0.6); opacity: 0.6; }
+        40% { transform: scale(1); opacity: 1; }
+      }
+      
+      .chat-msg.bot {
+        transition: all 0.2s ease;
+        animation: fadeIn 0.3s ease;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Ensure proper message alignment */
+      #chatbot-messages {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .chat-msg.user {
+        align-self: flex-end;
+        background-color: var(--chatbot-user-bubble);
+        color: #333;
+      }
+      
+      .chat-msg.bot {
+        align-self: flex-start;
+        background-color: var(--chatbot-bot-bubble);
+        color: #333;
+      }
+      
+      /* Markdown content styling */
+      .chat-msg.bot p {
+        margin: 0 0 8px 0;
+      }
+      
+      .chat-msg.bot p:last-child {
+        margin-bottom: 0;
+      }
+      
+      .chat-msg.bot ul, 
+      .chat-msg.bot ol {
+        margin: 4px 0 8px 0;
+        padding-left: 20px;
+      }
+      
+      .chat-msg.bot li {
+        margin-bottom: 2px;
+      }
+      
+      .chat-msg.bot strong {
+        font-weight: 600;
+      }
+      
+      .chat-msg.bot em {
+        font-style: italic;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Initialize reset button when DOM loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', addResetButton);
+    } else {
+      addResetButton();
+    }
+
+    // Add welcome message with typing animation
+    setTimeout(async () => {
+      if (chatbotMessages.children.length === 0) {
+        await typeWriterEffect("👋 Hello! I'm your AI assistant powered by Llama 3.3 70B. You can ask me anything about the news or general questions!");
+      }
+    }, 500);
+    //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
+
+  </script>
+</body>
+</html>
