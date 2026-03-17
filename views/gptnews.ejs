@@ -448,23 +448,42 @@
 
   <script>
     // ===== CONFIG =====
-    const API_KEY = "4a24e1c4a5962c36f679155697c5c96d"; // Replace with your actual GNews API key
+    // const API_KEY = "4a24e1c4a5962c36f679155697c5c96d"; // Replace with your actual GNews API key
     const BASE_URL = "https://gnews.io/api/v4/top-headlines?lang=en&country=in&topic=";
 
     window.addEventListener("load", () => {
       fetchNews("technology");
     });
 
+    // async function fetchNews(topic) {
+    //   try {
+    //     // const res = await fetch(`${BASE_URL}${topic}&apikey=${API_KEY}`);
+    //     const res = await fetch(`/api/news?topic=${topic}`);
+    //     const data = await res.json();
+    //     bindData(data.articles);
+    //   } catch (err) {
+    //     document.getElementById("cardscontainer").innerHTML = `<h2>❌ Error loading news.</h2>`;
+    //     console.error("Fetch error:", err);
+    //   }
+    // }
+
     async function fetchNews(topic) {
-      try {
-        const res = await fetch(`${BASE_URL}${topic}&apikey=${API_KEY}`);
-        const data = await res.json();
-        bindData(data.articles);
-      } catch (err) {
-        document.getElementById("cardscontainer").innerHTML = `<h2>❌ Error loading news.</h2>`;
-        console.error("Fetch error:", err);
-      }
+  try {
+    const res = await fetch(`/api/news?topic=${topic}`);
+    const data = await res.json();
+
+    if (!data.articles || data.articles.length === 0) {
+      document.getElementById("cardscontainer").innerHTML = "<h2>No results found 🔍</h2>";
+      return;
     }
+
+    bindData(data.articles);
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("cardscontainer").innerHTML = `<h2>❌ Error loading news.</h2>`;
+  }
+}
 
     function bindData(articles) {
       const container = document.getElementById("cardscontainer");

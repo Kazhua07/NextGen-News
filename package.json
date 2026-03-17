@@ -11,6 +11,7 @@
     "express-session": "^1.17.1",
     "mongodb": "^7.1.0",
     "mongoose": "^5.13.23",
+    "node-fetch": "^2.7.0",
     "nodemon": "^2.0.22"
   },
   "scripts": {

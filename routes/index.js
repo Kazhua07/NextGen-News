@@ -1,3 +1,4 @@
+const fetch = require('node-fetch');
 const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
@@ -66,6 +67,46 @@ router.post('/login', async (req, res, next) => {
 });
  
 
+// router.get('/api/news', async (req, res) => {
+//   try {
+//     const topic = req.query.topic || "technology";
+
+//     const response = await fetch(
+//   `https://gnews.io/api/v4/top-headlines?lang=en&country=in&topic=${topic}&apikey=4a24e1c4a5962c36f679155697c5c96d`
+// );
+
+//     const data = await response.json();
+//     res.json(data);
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Failed to fetch news" });
+//   }
+// });
+
+router.get('/api/news', async (req, res) => {
+  try {
+    const topic = req.query.topic || "technology";
+
+    const url = `https://gnews.io/api/v4/top-headlines?lang=en&country=in&topic=${topic}&apikey=4a24e1c4a5962c36f679155697c5c96d`;
+
+    // 🔥 ADD THESE LOGS HERE
+    console.log("FINAL URL:", url);
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    console.log("API RESPONSE:", data);
+
+    res.json(data);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch news" });
+  }
+});
+
+
 router.get('/news', (req, res, next) => {
 	User.findOne({ unique_id: req.session.userId }, (err, data) => {
 		if (!data) {
@@ -76,20 +117,6 @@ router.get('/news', (req, res, next) => {
 	});
 });
 
-// router.get('/profile', (req, res, next) => {
-// 	if (!req.session.userId) {
-// 		// If session does not exist, redirect to login
-// 		return res.redirect('/login');
-// 	}
-
-// 	User.findOne({ unique_id: req.session.userId }, (err, data) => {
-// 		if (!data) {
-// 			return res.redirect('/');
-// 		} else {
-// 			return res.render('home.ejs', { "name": data.username, "email": data.email });
-// 		}
-// 	});
-// });
 
 
 router.get('/logout', (req, res, next) => {
