@@ -71,7 +71,7 @@ router.get('/news', (req, res, next) => {
 		if (!data) {
 			res.redirect('/');
 		} else {
-			return res.render('news.ejs', { "name": data.username, "email": data.email });
+			return res.render('gptnews.ejs', { "name": data.username, "email": data.email });
 		}
 	});
 });
