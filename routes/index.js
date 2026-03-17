@@ -135,12 +135,15 @@ router.get('/api/news', async (req, res) => {
 
 router.post('/api/chat', async (req, res) => {
   try {
+    // 🔥 ADD HERE
+    console.log("OPENROUTER KEY:", process.env.OPENROUTER_API_KEY);
+
     const messages = req.body.messages;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`, // ✅ HERE
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
