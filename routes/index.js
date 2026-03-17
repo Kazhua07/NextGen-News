@@ -84,6 +84,7 @@ router.post('/login', async (req, res, next) => {
 //   }
 // });
 
+
 router.get('/api/news', async (req, res) => {
   try {
     const topic = req.query.topic || "technology";
@@ -106,6 +107,56 @@ router.get('/api/news', async (req, res) => {
   }
 });
 
+
+// router.post('/api/chat', async (req, res) => {
+//   try {
+//     const userMessage = req.body.message;
+
+//     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+//       method: "POST",
+//       headers: {
+//         "Authorization": "Bearer YOUR_OPENROUTER_API_KEY",
+//         "Content-Type": "application/json"
+//       },
+//       body: JSON.stringify({
+//         model: "openai/gpt-3.5-turbo",
+//         messages: [{ role: "user", content: userMessage }]
+//       })
+//     });
+
+//     const data = await response.json();
+//     res.json(data);
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Chat failed" });
+//   }
+// });
+
+router.post('/api/chat', async (req, res) => {
+  try {
+    const messages = req.body.messages;
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`, // ✅ HERE
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-3.5-turbo",
+        messages: messages
+      })
+    });
+
+    const data = await response.json();
+    res.json(data);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Chat failed" });
+  }
+});
 
 router.get('/news', (req, res, next) => {
 	User.findOne({ unique_id: req.session.userId }, (err, data) => {

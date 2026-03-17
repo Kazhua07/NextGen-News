@@ -632,17 +632,28 @@ async function sendMessage() {
       content: userMsg
     });
 
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer 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",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        "model": "openai/gpt-3.5-turbo",
-        "messages": window.conversationHistory
-      })
-    });
+    // const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    //   method: "POST",
+    //   headers: {
+    //     "Authorization": "Bearer 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",
+    //     "Content-Type": "application/json"
+    //   },
+    //   body: JSON.stringify({
+    //     "model": "openai/gpt-3.5-turbo",
+    //     "messages": window.conversationHistory
+    //   })
+    // });
+
+    //removed upper part and added this for backend API calls
+    const res = await fetch("/api/chat", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    messages: window.conversationHistory
+  })
+});
 
     // Remove typing indicator
     if (typingIndicator && typingIndicator.parentNode) {
@@ -653,11 +664,17 @@ async function sendMessage() {
       const errorData = await res.text();
       console.error("API Error:", res.status, errorData);
       
-      if (res.status === 401) {
-        appendMessage("bot", "❌ Invalid API key. Please check your OpenRouter API key.");
-      } else {
-        appendMessage("bot", `❌ API Error: ${res.status}`);
-      }
+    //   if (res.status === 401) {
+    //     appendMessage("bot", "❌ Invalid API key. Please check your OpenRouter API key.");
+    //   } else {
+    //     appendMessage("bot", `❌ API Error: ${res.status}`);
+    //   }
+
+    if (!res.ok) {
+  appendMessage("bot", "❌ Chatbot error");
+  return;
+}
+
       return;
     }
 
